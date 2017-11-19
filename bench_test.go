@@ -5,17 +5,15 @@ import (
 	"time"
 )
 
+type Writer interface {
+	Write(int32)
+}
+
 func BenchmarkGoroutine(b *testing.B) {
 	b.StopTimer()
 	a := NewGoroutine()
 	go a.Start()
-
-	ticker := time.NewTicker(10 * time.Millisecond)
-	go func() {
-		for range ticker.C {
-			a.Write(123)
-		}
-	}()
+	setupTickWriter(a)
 	b.StartTimer()
 
 	for n := 0; n < b.N; n++ {
@@ -26,12 +24,7 @@ func BenchmarkGoroutine(b *testing.B) {
 func BenchmarkAtomic(b *testing.B) {
 	b.StopTimer()
 	a := NewAtomic()
-	ticker := time.NewTicker(10 * time.Millisecond)
-	go func() {
-		for range ticker.C {
-			a.Write(123)
-		}
-	}()
+	setupTickWriter(a)
 	b.StartTimer()
 
 	for n := 0; n < b.N; n++ {
@@ -42,15 +35,19 @@ func BenchmarkAtomic(b *testing.B) {
 func BenchmarkMutex(b *testing.B) {
 	b.StopTimer()
 	a := NewMutex()
+	setupTickWriter(a)
+	b.StartTimer()
+
+	for n := 0; n < b.N; n++ {
+		a.Read()
+	}
+}
+
+func setupTickWriter(a Writer) {
 	ticker := time.NewTicker(10 * time.Millisecond)
 	go func() {
 		for range ticker.C {
 			a.Write(123)
 		}
 	}()
-	b.StartTimer()
-
-	for n := 0; n < b.N; n++ {
-		a.Read()
-	}
 }
