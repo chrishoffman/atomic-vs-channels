@@ -21,6 +21,20 @@ func BenchmarkGoroutine(b *testing.B) {
 	}
 }
 
+func BenchmarkGoroutineParallel(b *testing.B) {
+	b.StopTimer()
+	a := NewGoroutine()
+	go a.Start()
+	setupTickWriter(a)
+	b.StartTimer()
+
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			a.Read()
+		}
+	})
+}
+
 func BenchmarkAtomic(b *testing.B) {
 	b.StopTimer()
 	a := NewAtomic()
@@ -32,6 +46,19 @@ func BenchmarkAtomic(b *testing.B) {
 	}
 }
 
+func BenchmarkAtomicParallel(b *testing.B) {
+	b.StopTimer()
+	a := NewAtomic()
+	setupTickWriter(a)
+	b.StartTimer()
+
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			a.Read()
+		}
+	})
+}
+
 func BenchmarkMutex(b *testing.B) {
 	b.StopTimer()
 	a := NewMutex()
@@ -41,6 +68,19 @@ func BenchmarkMutex(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		a.Read()
 	}
+}
+
+func BenchmarkMutexParallel(b *testing.B) {
+	b.StopTimer()
+	a := NewMutex()
+	setupTickWriter(a)
+	b.StartTimer()
+
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			a.Read()
+		}
+	})
 }
 
 func setupTickWriter(a Writer) {
