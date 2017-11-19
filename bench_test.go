@@ -6,6 +6,7 @@ import (
 )
 
 func BenchmarkGoroutine(b *testing.B) {
+	b.StopTimer()
 	a := NewGoroutine()
 	go a.Start()
 
@@ -15,6 +16,7 @@ func BenchmarkGoroutine(b *testing.B) {
 			a.Write(123)
 		}
 	}()
+	b.StartTimer()
 
 	for n := 0; n < b.N; n++ {
 		a.Read()
@@ -22,6 +24,7 @@ func BenchmarkGoroutine(b *testing.B) {
 }
 
 func BenchmarkAtomic(b *testing.B) {
+	b.StopTimer()
 	a := NewAtomic()
 	ticker := time.NewTicker(10 * time.Millisecond)
 	go func() {
@@ -29,6 +32,23 @@ func BenchmarkAtomic(b *testing.B) {
 			a.Write(123)
 		}
 	}()
+	b.StartTimer()
+
+	for n := 0; n < b.N; n++ {
+		a.Read()
+	}
+}
+
+func BenchmarkMutex(b *testing.B) {
+	b.StopTimer()
+	a := NewMutex()
+	ticker := time.NewTicker(10 * time.Millisecond)
+	go func() {
+		for range ticker.C {
+			a.Write(123)
+		}
+	}()
+	b.StartTimer()
 
 	for n := 0; n < b.N; n++ {
 		a.Read()
